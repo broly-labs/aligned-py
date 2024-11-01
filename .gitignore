@@ -1,0 +1,16 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/.venv
+/venv
+/.pytest_cache
+__pycache__
+.idea
+
+# misc
+.DS_Store
+dist
+
+# local env files
+.env*.local
+.env
