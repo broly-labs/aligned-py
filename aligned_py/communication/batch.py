@@ -1,6 +1,6 @@
 import asyncio
-from core.errors import SubmitError
-from core.types import AlignedVerificationData, Network
+from aligned_py.core.errors import SubmitError
+from aligned_py.core.types import AlignedVerificationData, Network
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds
@@ -10,7 +10,7 @@ async def await_batch_verification(
     rpc_url: str,
     network: Network
 ) -> None:
-    from sdk import is_proof_verified
+    from aligned_py.sdk import is_proof_verified
     """Waits for the batch verification by retrying a fixed number of times with a delay between attempts."""
     for _ in range(RETRIES):
         verified = is_proof_verified(aligned_verification_data, network, rpc_url)
