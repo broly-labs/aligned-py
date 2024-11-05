@@ -102,11 +102,11 @@ Queries a User's balance that was deposited in Aligned
 from aligned_py.sdk import get_next_nonce, Network
 
 def main():    
-    nonce = get_next_nonce(
-        "ETH_RPC_URL",
+    balance = get_balance_in_aligned(
         "ADDRESS",
+        "ETH_RPC_URL",
         "NETWORK.NAME"
     )
-    print(nonce)
+    print(balance)
 ```
 
