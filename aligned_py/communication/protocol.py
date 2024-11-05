@@ -1,6 +1,6 @@
 import websockets
-from .serialization import cbor_deserialize
-from core.errors import SubmitError
+from aligned_py.communication.serialization import cbor_deserialize
+from aligned_py.core.errors import SubmitError
 
 EXPECTED_PROTOCOL_VERSION = 4
 
@@ -13,7 +13,6 @@ async def check_protocol_version(ws_read):
             if isinstance(msg, dict) and 'ProtocolVersion' in msg:
                 protocol_version = msg['ProtocolVersion']
 
-                # Compare the received protocol version with the expected one
                 if protocol_version > EXPECTED_PROTOCOL_VERSION:
                     raise ProtocolVersionMismatch(current=protocol_version, expected=EXPECTED_PROTOCOL_VERSION)
             else:
@@ -22,7 +21,6 @@ async def check_protocol_version(ws_read):
     except websockets.ConnectionClosed:
         raise SubmitError.generic_error("WebSocket connection closed unexpectedly.")
     except Exception as e:
-        # Catch any unexpected errors and wrap them in a SubmitError
         raise SubmitError.generic_error(f"Unexpected error: {str(e)}")
 
 class ProtocolVersionMismatch(SubmitError):

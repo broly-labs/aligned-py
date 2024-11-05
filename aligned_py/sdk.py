@@ -3,13 +3,13 @@ from pathlib import Path
 from typing import List
 import json
 from web3 import Web3, HTTPProvider
-from core.constants import (
+from aligned_py.core.constants import (
     ADDITIONAL_SUBMISSION_GAS_COST_PER_PROOF,
     CONSTANT_GAS_COST,
     MAX_FEE_BATCH_PROOF_NUMBER,
     MAX_FEE_DEFAULT_PROOF_NUMBER
 )
-from core.errors import (
+from aligned_py.core.errors import (
     NonceError,
     ChainIdError,
     BalanceError,
@@ -18,17 +18,17 @@ from core.errors import (
     VerificationError,
     SubmitError
 )
-from core.types import (
+from aligned_py.core.types import (
     AlignedVerificationData, Network, PriceEstimate,
     VerificationData, VerificationDataCommitment
 )
 from eth_account import Account
-from communication.protocol import check_protocol_version
-from communication.messaging import send_messages, receive
-from communication.batch import await_batch_verification
-from eth.batcher_payment_service import batcher_payment_service
-from eth.aligned_service_manager import aligned_service_manager
-from communication.serialization import cbor_serialize
+from aligned_py.communication.protocol import check_protocol_version
+from aligned_py.communication.messaging import send_messages, receive
+from aligned_py.communication.batch import await_batch_verification
+from aligned_py.eth.batcher_payment_service import batcher_payment_service
+from aligned_py.eth.aligned_service_manager import aligned_service_manager
+from aligned_py.communication.serialization import cbor_serialize
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds

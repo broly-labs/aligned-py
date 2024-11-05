@@ -1,12 +1,12 @@
 from typing import List
 from eth_typing import Address
 from eth_account import Account
-from core.errors import SubmitError
-from core.types import (
+from aligned_py.core.errors import SubmitError
+from aligned_py.core.types import (
     AlignedVerificationData, ClientMessage, NoncedVerificationData, BatchInclusionData,
-    ValidityResponseMessage, VerificationData, VerificationDataCommitment
+    ValidityResponseMessage, VerificationData, VerificationDataCommitment, ProofInvalidReason
 )
-from communication.serialization import cbor_serialize, cbor_deserialize
+from aligned_py.communication.serialization import cbor_serialize, cbor_deserialize
 import json
 import websockets
 
@@ -42,6 +42,12 @@ async def send_messages(
 
             if response_msg == ValidityResponseMessage.Valid.value:
                 break
+            elif response_msg.get("InvalidProof") == ProofInvalidReason.RejectedProof.value:
+                raise SubmitError.invalid_proof(ProofInvalidReason.RejectedProof.value)
+            elif response_msg.get("InvalidProof") == ProofInvalidReason.VerifierNotSupported.value:
+                raise SubmitError.invalid_proof(ProofInvalidReason.VerifierNotSupported.value)
+            elif response_msg.get("InvalidProof") == ProofInvalidReason.DisabledVerifier.value:
+                raise SubmitError.invalid_proof(ProofInvalidReason.DisabledVerifier.value)
             else:
                 handle_response_error(response_msg)
 
@@ -107,4 +113,3 @@ def handle_response_error(response_msg):
         raise SubmitError.ethereum_provider_error("Batcher experienced Eth RPC connection error")
     elif response_msg == ValidityResponseMessage.InvalidPaymentServiceAddress.value:
         raise SubmitError.invalid_payment_service_address(response_msg.received_addr, response_msg.expected_addr)
-

@@ -1,10 +1,9 @@
-# core/errors.py
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Union, Dict, Any
 from eth_typing import Address
-from .types import ProofInvalidReason
+from aligned_py.core.types import ProofInvalidReason
 
 class AlignedError(Exception):
     """Base exception class for all Aligned errors."""
