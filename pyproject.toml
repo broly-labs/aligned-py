@@ -1,13 +1,27 @@
 [tool.poetry]
 name = "aligned-py"
-version = "0.1.0"
-description = "Aligned"
-authors = ["khairallah <khairallah@web3arabs.com>"]
+version = "0.1.1"
+description = "Aligned-PY is a Python library for interacting with the Aligned layer."
+authors = ["Broly Labs <khairallah@web3arabs.com>"]
 readme = "README.md"
+license = "MIT"
+packages = [
+    { include = "aligned_py" }
+]
+keywords = ["aligned", "network", "python", "library"]
+repository = "https://github.com/broly-labs/aligned-py"
+documentation = "https://docs.alignedlayer.com/"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+eth-account = "^0.13.4"
+safe-pysha3 = "1.0.4"
+web3 = "7.4.0"
+websockets = "13.1"
+cbor2 = "5.6.5"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
 
 [build-system]
 requires = ["poetry-core"]
