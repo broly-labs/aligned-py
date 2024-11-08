@@ -10,7 +10,7 @@ from aligned_py.core.types import (
     ValidityResponseMessage, VerificationData, VerificationDataCommitment, ProofInvalidReason
 )
 from aligned_py.communication.serialization import cbor_serialize, cbor_deserialize
-from logs import logs
+from aligned_py.core.logs import logs
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds

@@ -29,7 +29,7 @@ from aligned_py.communication.batch import await_batch_verification
 from aligned_py.eth.batcher_payment_service import batcher_payment_service
 from aligned_py.eth.aligned_service_manager import aligned_service_manager
 from aligned_py.communication.serialization import cbor_serialize
-from logs import logs
+from aligned_py.core.logs import logs
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds
