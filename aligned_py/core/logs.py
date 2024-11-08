@@ -4,7 +4,7 @@ import os
 def logs():
     log_level = os.getenv("LOGLEVEL", "INFO").upper()
     
-    logger = logging.getLogger("fuck")
+    logger = logging.getLogger("aligned_py")
     logger.setLevel(getattr(logging, log_level, logging.INFO))
 
     console_handler = logging.StreamHandler()
