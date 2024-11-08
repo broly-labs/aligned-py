@@ -3,7 +3,7 @@ from web3 import Web3
 from pathlib import Path
 
 # Load the ABI for BatcherPaymentService
-with open(Path(__file__).parent / '../abi/BatcherPaymentService.json') as f:
+with open(Path(__file__).parent / '../../abi/BatcherPaymentService.json') as f:
     BatcherPaymentServiceABI = json.load(f)
 
 def batcher_payment_service(provider: Web3, contract_address: str):

@@ -29,6 +29,7 @@ from aligned_py.communication.batch import await_batch_verification
 from aligned_py.eth.batcher_payment_service import batcher_payment_service
 from aligned_py.eth.aligned_service_manager import aligned_service_manager
 from aligned_py.communication.serialization import cbor_serialize
+from logs import logs
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds
@@ -204,7 +205,7 @@ async def submit_multiple_and_wait_verification(
     nonce: int
 ) -> List[AlignedVerificationData]:
     aligned_verification_data = await submit_multiple(
-        batcher_url, network, verification_data, max_fees, wallet, nonce
+        batcher_url, eth_rpc_url, network, verification_data, max_fees, wallet, nonce
     )
 
     for data in aligned_verification_data:
@@ -215,6 +216,7 @@ async def submit_multiple_and_wait_verification(
 
 async def submit_multiple(
     batcher_url: str,
+    eth_rpc_url: str,
     network: Network,
     verification_data: List[VerificationData],
     max_fees: List[int],
@@ -222,24 +224,25 @@ async def submit_multiple(
     nonce: int
 ) -> List[AlignedVerificationData]:
     return await _submit_multiple(
-        batcher_url, network, verification_data, max_fees, wallet, nonce
+        batcher_url, eth_rpc_url, network, verification_data, max_fees, wallet, nonce
     )
 
 
 async def _submit_multiple(
-    batcher_url, network: Network,
+    batcher_url, eth_rpc_url, network: Network,
     verification_data: List[VerificationData],
     max_fees: List[int], wallet: Account, nonce: int
 ) -> List[AlignedVerificationData]:
     await check_protocol_version(batcher_url)
 
+    logs().debug("WebSocket handshake has been successfully completed")
     async with websockets.connect(batcher_url) as socket:
         if not verification_data:
             raise SubmitError.missing_required_parameter("verification_data")
 
         payment_service_addr = get_payment_service_address(network)
         sent_verification_data = await send_messages(
-            socket, payment_service_addr,
+            socket, eth_rpc_url, payment_service_addr,
             verification_data, max_fees, wallet, nonce
         )
 
@@ -305,7 +308,7 @@ def save_response_cbor(
 
     with open(file_path, "wb") as file:
         file.write(data)
-    print(f"Batch inclusion data written into {file_path}")
+    logs().debug(f"Batch inclusion data written into {file_path}")
 
 
 def save_response_json(
@@ -330,4 +333,4 @@ def save_response_json(
     with open(file_path, "w") as file:
         json.dump(data, file, indent=4)
 
-    print(f"Batch inclusion data written into {file_path}")
+    logs().debug(f"Batch inclusion data written into {file_path}")
