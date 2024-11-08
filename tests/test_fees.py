@@ -3,6 +3,7 @@ from aligned_py.sdk import compute_max_fee, estimate_fee
 
 HOLESKY_PUBLIC_RPC_URL = "https://ethereum-holesky-rpc.publicnode.com"
 
+
 def test_computed_max_fee_for_larger_batch_is_smaller():
     small_fee = compute_max_fee(HOLESKY_PUBLIC_RPC_URL, 2, 10)
     large_fee = compute_max_fee(HOLESKY_PUBLIC_RPC_URL, 5, 10)

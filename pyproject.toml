@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aligned-py"
-version = "0.1.4"
+version = "0.2.0-alpha"
 description = "Aligned-PY is a Python library for interacting with the Aligned layer."
 authors = ["Broly Labs <khairallah@web3arabs.com>"]
 readme = "README.md"
