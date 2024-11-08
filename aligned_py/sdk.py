@@ -129,21 +129,47 @@ def compute_max_fee(eth_rpc_url: str, num_proofs: int, num_proofs_per_batch: int
     fee_per_proof_value = fee_per_proof(eth_rpc_url, num_proofs_per_batch)
     return fee_per_proof_value * num_proofs
 
-def deposit_to_aligned(amount: int, signer, network: Network) -> dict:
+
+def deposit_to_aligned(
+    amount: int, eth_rpc_url: str, signer: Account, network: Network
+):
     """Deposit an amount to the aligned service."""
     try:
+        web3 = Web3(Web3.HTTPProvider(eth_rpc_url))
+        
         payment_service_address = get_payment_service_address(network)
-        tx = signer.send_transaction({
+        nonce = web3.eth.get_transaction_count(signer.address, 'pending')
+
+        latest_block = web3.eth.get_block('latest')
+        base_fee = latest_block['baseFeePerGas']
+        max_priority_fee = web3.eth.max_priority_fee
+        max_fee = (2 * base_fee) + max_priority_fee
+        gas_estimate = web3.eth.estimate_gas({
             'to': payment_service_address,
-            'value': amount
+            'value': amount,
+            'from': signer.address
         })
-        receipt = tx.wait_for_receipt()
-        if not receipt:
-            raise PaymentError('PaymentFailed')
+
+        transaction = {
+            'to': payment_service_address,
+            'value': amount,
+            'gas': gas_estimate,
+            'maxFeePerGas': max_fee,
+            'maxPriorityFeePerGas': max_priority_fee,
+            'nonce': nonce,
+            'chainId': web3.eth.chain_id,
+            'type': 2 
+        }
+
+        signed_tx = signer.sign_transaction(transaction)
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+        if receipt.status != 1:
+            raise PaymentError.payment_failed()
         return receipt
     except Exception as e:
-        raise PaymentError('SendError', str(e))
-
+        raise PaymentError.send_error()
 
 def is_proof_verified(
     aligned_verification_data: AlignedVerificationData,
