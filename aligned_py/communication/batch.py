@@ -17,9 +17,6 @@ async def await_batch_verification(
         if verified:
             return
 
-        print(
-            f"Proof not verified yet. Waiting {TIME_BETWEEN_RETRIES} seconds before checking again..."
-        )
         await asyncio.sleep(TIME_BETWEEN_RETRIES)
 
     raise SubmitError.batch_verification_timeout(TIME_BETWEEN_RETRIES * RETRIES)
