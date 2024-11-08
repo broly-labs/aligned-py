@@ -3,7 +3,7 @@ from web3 import Web3
 from pathlib import Path
 
 # Load the ABI for AlignedLayerServiceManager
-with open(Path(__file__).parent / '../abi/AlignedLayerServiceManager.json') as f:
+with open(Path(__file__).parent / '../../abi/AlignedLayerServiceManager.json') as f:
     AlignedLayerServiceManagerABI = json.load(f)
 
 def aligned_service_manager(provider: Web3, contract_address: str):

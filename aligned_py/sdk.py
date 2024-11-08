@@ -29,6 +29,7 @@ from aligned_py.communication.batch import await_batch_verification
 from aligned_py.eth.batcher_payment_service import batcher_payment_service
 from aligned_py.eth.aligned_service_manager import aligned_service_manager
 from aligned_py.communication.serialization import cbor_serialize
+from logs import logs
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds
@@ -128,21 +129,47 @@ def compute_max_fee(eth_rpc_url: str, num_proofs: int, num_proofs_per_batch: int
     fee_per_proof_value = fee_per_proof(eth_rpc_url, num_proofs_per_batch)
     return fee_per_proof_value * num_proofs
 
-def deposit_to_aligned(amount: int, signer, network: Network) -> dict:
+
+def deposit_to_aligned(
+    amount: int, eth_rpc_url: str, signer: Account, network: Network
+):
     """Deposit an amount to the aligned service."""
     try:
+        web3 = Web3(Web3.HTTPProvider(eth_rpc_url))
+        
         payment_service_address = get_payment_service_address(network)
-        tx = signer.send_transaction({
+        nonce = web3.eth.get_transaction_count(signer.address, 'pending')
+
+        latest_block = web3.eth.get_block('latest')
+        base_fee = latest_block['baseFeePerGas']
+        max_priority_fee = web3.eth.max_priority_fee
+        max_fee = (2 * base_fee) + max_priority_fee
+        gas_estimate = web3.eth.estimate_gas({
             'to': payment_service_address,
-            'value': amount
+            'value': amount,
+            'from': signer.address
         })
-        receipt = tx.wait_for_receipt()
-        if not receipt:
-            raise PaymentError('PaymentFailed')
+
+        transaction = {
+            'to': payment_service_address,
+            'value': amount,
+            'gas': gas_estimate,
+            'maxFeePerGas': max_fee,
+            'maxPriorityFeePerGas': max_priority_fee,
+            'nonce': nonce,
+            'chainId': web3.eth.chain_id,
+            'type': 2 
+        }
+
+        signed_tx = signer.sign_transaction(transaction)
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+        if receipt.status != 1:
+            raise PaymentError.payment_failed()
         return receipt
     except Exception as e:
-        raise PaymentError('SendError', str(e))
-
+        raise PaymentError.send_error()
 
 def is_proof_verified(
     aligned_verification_data: AlignedVerificationData,
@@ -204,7 +231,7 @@ async def submit_multiple_and_wait_verification(
     nonce: int
 ) -> List[AlignedVerificationData]:
     aligned_verification_data = await submit_multiple(
-        batcher_url, network, verification_data, max_fees, wallet, nonce
+        batcher_url, eth_rpc_url, network, verification_data, max_fees, wallet, nonce
     )
 
     for data in aligned_verification_data:
@@ -215,6 +242,7 @@ async def submit_multiple_and_wait_verification(
 
 async def submit_multiple(
     batcher_url: str,
+    eth_rpc_url: str,
     network: Network,
     verification_data: List[VerificationData],
     max_fees: List[int],
@@ -222,24 +250,25 @@ async def submit_multiple(
     nonce: int
 ) -> List[AlignedVerificationData]:
     return await _submit_multiple(
-        batcher_url, network, verification_data, max_fees, wallet, nonce
+        batcher_url, eth_rpc_url, network, verification_data, max_fees, wallet, nonce
     )
 
 
 async def _submit_multiple(
-    batcher_url, network: Network,
+    batcher_url, eth_rpc_url, network: Network,
     verification_data: List[VerificationData],
     max_fees: List[int], wallet: Account, nonce: int
 ) -> List[AlignedVerificationData]:
     await check_protocol_version(batcher_url)
 
+    logs().debug("WebSocket handshake has been successfully completed")
     async with websockets.connect(batcher_url) as socket:
         if not verification_data:
             raise SubmitError.missing_required_parameter("verification_data")
 
         payment_service_addr = get_payment_service_address(network)
         sent_verification_data = await send_messages(
-            socket, payment_service_addr,
+            socket, eth_rpc_url, payment_service_addr,
             verification_data, max_fees, wallet, nonce
         )
 
@@ -305,7 +334,7 @@ def save_response_cbor(
 
     with open(file_path, "wb") as file:
         file.write(data)
-    print(f"Batch inclusion data written into {file_path}")
+    logs().debug(f"Batch inclusion data written into {file_path}")
 
 
 def save_response_json(
@@ -330,4 +359,4 @@ def save_response_json(
     with open(file_path, "w") as file:
         json.dump(data, file, indent=4)
 
-    print(f"Batch inclusion data written into {file_path}")
+    logs().debug(f"Batch inclusion data written into {file_path}")

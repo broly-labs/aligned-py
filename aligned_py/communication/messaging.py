@@ -1,26 +1,30 @@
+import json
+import websockets
 from typing import List
 from eth_typing import Address
 from eth_account import Account
+from web3 import Web3
 from aligned_py.core.errors import SubmitError
 from aligned_py.core.types import (
     AlignedVerificationData, ClientMessage, NoncedVerificationData, BatchInclusionData,
     ValidityResponseMessage, VerificationData, VerificationDataCommitment, ProofInvalidReason
 )
 from aligned_py.communication.serialization import cbor_serialize, cbor_deserialize
-import json
-import websockets
+from logs import logs
 
 RETRIES = 10
 TIME_BETWEEN_RETRIES = 10  # seconds
 
 async def send_messages(
-    socket, payment_service_addr: Address,
+    socket, eth_rpc_url, payment_service_addr: Address,
     verification_data: List[VerificationData], max_fees: List[int],
     wallet: Account, nonce: int
 ) -> List[NoncedVerificationData]:
     """Send a series of messages and process responses."""
     sent_verification_data = []
-    chain_id = 17000  # Set this according to your setup
+
+    web3 = Web3(Web3.HTTPProvider(eth_rpc_url))
+    chain_id = web3.eth.chain_id
 
     for idx, data in enumerate(verification_data):
         nonced_data = NoncedVerificationData.new(
@@ -35,7 +39,7 @@ async def send_messages(
         client_msg = ClientMessage.new(nonced_data, wallet)
         msg_bin = cbor_serialize(json.loads(client_msg.to_string()))
         await socket.send(msg_bin)
-        print("Message sent...")
+        logs().debug("Message sent...")
 
         async for message in socket:
             response_msg = cbor_deserialize(message)
@@ -67,6 +71,7 @@ async def receive(
         async for message in socket:
             num_responses += 1
             response_msg = cbor_deserialize(message)
+            logs().debug("Received response from batcher")
 
             if next(iter(response_msg.keys())) == "BatchInclusionData":
                 inclusion_data = BatchInclusionData(
@@ -83,9 +88,10 @@ async def receive(
                 )
                 
                 if num_responses >= total_messages:
+                    logs().debug("All messages responded. Closing connection...")
                     break
     except websockets.ConnectionClosed:
-        print("WebSocket connection closed.")
+        logs().debug("WebSocket connection closed.")
 
     return aligned_verification_data
 

@@ -1,4 +1,5 @@
 import asyncio
+from logs import logs
 from aligned_py.core.errors import SubmitError
 from aligned_py.core.types import AlignedVerificationData, Network
 
@@ -17,7 +18,7 @@ async def await_batch_verification(
         if verified:
             return
 
-        print(
+        logs().debug(
             f"Proof not verified yet. Waiting {TIME_BETWEEN_RETRIES} seconds before checking again..."
         )
         await asyncio.sleep(TIME_BETWEEN_RETRIES)

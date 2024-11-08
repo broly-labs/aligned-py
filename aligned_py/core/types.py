@@ -69,22 +69,18 @@ class VerificationDataCommitment:
     @classmethod
     def from_data(cls, data: VerificationData) -> 'VerificationDataCommitment':
         """Create VerificationDataCommitment from VerificationData"""
-        # Ensure proof is bytes
         if isinstance(data.proof, (list, tuple)):
             proof_bytes = bytes(data.proof)
         else:
             proof_bytes = data.proof if isinstance(data.proof, bytes) else bytes(data.proof)
         
-        # Compute proof commitment
         proof_commitment = keccak_256(proof_bytes).digest()
 
-        # Compute public input commitment
-        public_input_commitment = bytes(32)  # Initialize with zeros
+        public_input_commitment = bytes(32)
         if data.public_input is not None:
             input_bytes = bytes(data.public_input) if not isinstance(data.public_input, bytes) else data.public_input
             public_input_commitment = keccak_256(input_bytes).digest()
 
-        # Compute proving system auxiliary data commitment
         proving_system_aux_data_commitment = bytes(32)
         proving_system_byte = bytes([data.proving_system.value])
 
@@ -101,7 +97,6 @@ class VerificationDataCommitment:
             hasher.update(proving_system_byte)
             proving_system_aux_data_commitment = hasher.digest()
 
-        # Convert proof generator address to bytes
         if data.proof_generator_address.startswith('0x'):
             proof_generator_addr = bytes.fromhex(data.proof_generator_address[2:])
         else:
