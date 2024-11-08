@@ -1,5 +1,5 @@
 import asyncio
-from logs import logs
+from aligned_py.core.logs import logs
 from aligned_py.core.errors import SubmitError
 from aligned_py.core.types import AlignedVerificationData, Network
 
